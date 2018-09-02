@@ -27,6 +27,20 @@ switch_on(bar,
     [](auto f) { std::cout << "something else: " << f.v; });
 */
 
+// no more cases
+template<typename T>
+constexpr void switch_on(const T&) {}
+
+// default case if there is a Callable at the end with no matching case
+template<typename T, typename Callable>
+constexpr void switch_on(T&& val, Callable&& do_default)
+{
+    if constexpr (std::is_invocable_v<Callable, T>)
+        std::invoke(do_default, std::forward<T>(val));
+    else
+        std::invoke(do_default);
+}
+
 // recurse through cases until we find a match (or don't)
 template<typename T, typename Y, typename Callable, typename... Rest>
 constexpr void switch_on(T&& val, Y&& _case, Callable&& do_if, Rest&&... rest)
@@ -45,17 +59,3 @@ constexpr void switch_on(T&& val, Y&& _case, Callable&& do_if, Rest&&... rest)
         switch_on(std::forward<T>(val), std::forward<Rest>(rest)...);
     }
 }
-
-// default case if there is a Callable at the end with no matching case
-template<typename T, typename Callable>
-constexpr void switch_on(T&& val, Callable&& do_default)
-{
-    if constexpr (std::is_invocable_v<Callable, T>)
-        std::invoke(do_default, std::forward<T>(val));
-    else
-        std::invoke(do_default);
-}
-
-// no more cases
-template<typename T>
-constexpr void switch_on(const T&) {}
